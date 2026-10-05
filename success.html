@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>GhostGuard Pro — Purchase complete</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="success-page">
+  <div class="bg-orb orb-a"></div><div class="bg-orb orb-b"></div>
+  <header class="nav shell">
+    <a class="brand" href="index.html"><span class="logo">G</span><span><strong>GHOSTGUARD</strong><small>PRO FORENSIC SUITE</small></span></a>
+    <a class="btn btn-secondary" href="index.html">Back to site</a>
+  </header>
+  <main class="success-main shell">
+    <section class="success-card">
+      <div class="success-badge">✓ Payment received</div>
+      <h1>Your GhostGuard Pro license</h1>
+      <p>We are confirming the Stripe payment and preparing your device-bound license.</p>
+      <div class="license-box">
+        <label>LICENSE KEY</label>
+        <div class="license-row">
+          <div id="licenseKey" class="license-value">Preparing license…</div>
+          <button id="copyButton" class="btn btn-secondary" disabled>Copy key</button>
+        </div>
+        <div id="status" class="success-status">Waiting for payment confirmation…</div>
+      </div>
+      <div class="success-actions">
+        <a id="downloadButton" class="btn btn-primary" href="#" download>Download GhostGuard Launcher</a>
+        <a class="btn btn-ghost" href="index.html#workflow">Setup instructions</a>
+      </div>
+      <div class="success-help"><strong>Keep your license private.</strong> Open the launcher, paste the key, then choose <strong>Verify &amp; Update</strong>. If the license is still being prepared, this page will retry automatically.</div>
+    </section>
+  </main>
+  <script src="config.js"></script>
+  <script>
+  (() => {
+    const cfg = window.GHOSTGUARD_CONFIG || {};
+    const keyEl = document.getElementById('licenseKey');
+    const statusEl = document.getElementById('status');
+    const copy = document.getElementById('copyButton');
+    const download = document.getElementById('downloadButton');
+    const params = new URLSearchParams(location.search);
+    const sessionId = (params.get('session_id') || '').trim();
+    let licenseKey = '';
+    download.href = cfg.launcherUrl || 'downloads/GhostGuardLauncher.exe';
+
+    function setStatus(message, kind='') {
+      statusEl.textContent = message;
+      statusEl.className = 'success-status' + (kind ? ' ' + kind : '');
+    }
+    async function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+    async function loadLicense(){
+      if (!sessionId || !sessionId.startsWith('cs_')) {
+        keyEl.textContent = 'Missing Stripe session';
+        setStatus('This page needs a valid Stripe Checkout Session ID.', 'bad');
+        return;
+      }
+      const base = (cfg.apiBase || '').replace(/\/$/, '');
+      if (!base) {
+        keyEl.textContent = 'Configuration error';
+        setStatus('GhostGuard API is not configured.', 'bad');
+        return;
+      }
+      for (let i=0; i<30; i++) {
+        try {
+          const res = await fetch(base + '/v1/license/from-session?session_id=' + encodeURIComponent(sessionId), {cache:'no-store'});
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.ok && data.license_key) {
+            licenseKey = data.license_key;
+            keyEl.textContent = licenseKey;
+            copy.disabled = false;
+            setStatus('License ready. Download the launcher and activate it on your PC.', 'good');
+            return;
+          }
+          if (res.status !== 404) throw new Error(data.error || 'Could not retrieve license');
+        } catch (err) {
+          if (i >= 29) {
+            keyEl.textContent = 'Could not load license';
+            setStatus('Please refresh the page in a moment. Your payment is not lost.', 'bad');
+            return;
+          }
+        }
+        setStatus('Payment confirmed. Preparing license… (' + (i+1) + '/30)');
+        await sleep(2000);
+      }
+      keyEl.textContent = 'License is taking longer than expected';
+      setStatus('Refresh this page in a moment. Your payment is not lost.', 'bad');
+    }
+    copy.addEventListener('click', async () => {
+      if (!licenseKey) return;
+      try { await navigator.clipboard.writeText(licenseKey); copy.textContent = 'Copied'; setTimeout(()=>copy.textContent='Copy key',1500); }
+      catch { window.prompt('Copy your GhostGuard license key:', licenseKey); }
+    });
+    loadLicense();
+  })();
+  </script>
+</body>
+</html>

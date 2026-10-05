@@ -1,0 +1,26 @@
+GHOSTGUARD WEBSITE + STRIPE FINAL SETUP
+
+1) Atidaryk config.js ir pakeisk:
+   REPLACE_WITH_STRIPE_PAYMENT_LINK
+   i savo pilna Stripe Sandbox Payment Link URL (https://buy.stripe.com/test_...)
+
+2) Ikelk VISUS sio Website aplanko failus i DableQ.github.io repo root.
+   Nepamirsk success.html, config.js ir downloads/GhostGuardLauncher.exe.
+
+3) Stripe Sandbox -> Payment Links -> GhostGuard Pro -> After payment / Confirmation page.
+   Pasirink redirect to your website ir nustatyk:
+   https://dableq.github.io/success.html?session_id={CHECKOUT_SESSION_ID}
+
+4) Atlik nauja sandbox pirkima. Po mokejimo Stripe turi peradresuoti i success.html,
+   o puslapis automatiskai paims GG-... licencija is GhostGuard backend.
+
+5) Pries REALIUS pardavimus Render ghostguard-backend Environment pridek:
+   GG_STRIPE_PAYMENT_LINK_IDS=<tavo GhostGuard Payment Link plink_... ID>
+   Tai neleis kitam Stripe Payment Link generuoti GhostGuard licenciju.
+
+6) Pries realius pardavimus upgrade Render planus:
+   - Free web service uzmiega ir pirmas request gali veluoti.
+   - Free Postgres pagal Render nurodyta data bus istrintas, jei nebus upgrade.
+
+Svarbu: jokiu private.key, GG_PRIVATE_KEY_B64, GG_LICENSE_DATA_KEY_B64,
+Stripe webhook secret ar Stripe secret key nekelk i GitHub.

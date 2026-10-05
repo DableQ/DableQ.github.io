@@ -1,13 +1,15 @@
 document.getElementById('year').textContent = new Date().getFullYear();
+const cfg = window.GHOSTGUARD_CONFIG || {};
 const buy = document.getElementById('buyButton');
 if (buy) {
-  buy.addEventListener('click', (e) => {
-    const url = buy.dataset.checkout;
-    if (!url || url.includes('YOUR_LEMON_SQUEEZY_CHECKOUT_URL')) {
+  const url = (cfg.checkoutUrl || '').trim();
+  if (url && !url.includes('REPLACE_WITH_STRIPE_PAYMENT_LINK')) {
+    buy.href = url;
+    buy.rel = 'noopener';
+  } else {
+    buy.addEventListener('click', (e) => {
       e.preventDefault();
-      alert('Checkout will be enabled after the Lemon Squeezy product is connected.');
-    } else {
-      buy.href = url;
-    }
-  });
+      alert('Stripe checkout is not connected yet. Add your Payment Link URL in config.js.');
+    });
+  }
 }
